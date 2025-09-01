@@ -1,0 +1,110 @@
+import java.sql.*;
+
+public class JDBC_App {
+
+    private static Connection connection;
+
+    public static void main(String[] args) throws SQLException {
+        try {
+            openDataBaseConnection();
+            /* CRUD operations
+                C - Create
+                R - Read
+                U - Update
+                D - Delete
+            */
+
+            // Create Data
+            //createData(int - BookID, string - Title)
+            createData(01, "book01");
+            createData(02, "book02");
+            createData(03, "book07");
+            createData(04, "RemoveMe");
+            // Read Data
+            readData();
+            // Update Data
+            updateData(03, "book03_updated");
+            readData();
+            //Delete Data
+            deleteData(04);
+            readData();
+
+
+
+        }
+        finally{
+            closeDataBaseConnection();
+        }
+    }
+    private static void createData(int BookID, String Title) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO dbfinal.Books(BookID, Title)
+                VALUES (?,?)
+            """);
+            statement.setInt(1, BookID);
+            statement.setString(2, Title);
+            int rowsInserted = statement.executeUpdate();
+            statement.close();
+            System.out.println("rowsInserted: " + rowsInserted);
+    };
+
+    private static void readData() throws SQLException {
+        System.out.println("Reading data from database...");
+        PreparedStatement statement = connection.prepareStatement("""
+                SELECT * 
+                FROM dbfinal.Books
+            """);
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next()) {
+           int BookID = resultSet.getInt(1);
+           String Title = resultSet.getString(2);
+           System.out.println("BookID: " + BookID + ", Title: " + Title);
+        }
+        statement.close();
+    };
+
+    private static void updateData(int BookID, String newTitle) throws SQLException {
+        System.out.println("Updating data from database...");
+        PreparedStatement statement = connection.prepareStatement("""
+                UPDATE dbfinal.Books 
+                SET Title = ?
+                WHERE BookID = ?
+                """);
+        statement.setString(1, newTitle);
+        statement.setInt(2, BookID);
+        int rowsUpdated = statement.executeUpdate();
+        System.out.println("rowsUpdated: " + rowsUpdated);
+        statement.close();
+
+    }
+
+    private static void deleteData(int BookID) throws SQLException {
+        System.out.println("Deleting data from database...");
+        PreparedStatement statement = connection.prepareStatement("""
+               DELETE from dbfinal.Books
+               WHERE BookID = ?
+                """);
+        statement.setInt(1, BookID);
+        int rowsDeleted = statement.executeUpdate();
+        System.out.println("rowsDeleted: " + rowsDeleted);
+        statement.close();
+    }
+
+    private static void openDataBaseConnection() throws SQLException {
+        System.out.println("Connecting to database...");
+        connection = DriverManager.getConnection(
+                "jdbc:mysql://localhost:3306/dbfinal",
+                "local userName removed for security",
+                "local password removed for security"
+        );
+
+        System.out.println("Connection successful: " + connection.isValid(5));
+    }
+
+    private static void closeDataBaseConnection() throws SQLException {
+        System.out.println("Disconnecting from database...");
+        connection.close();
+        System.out.println("Connection successful: " + connection.isValid(5));
+    }
+
+}
